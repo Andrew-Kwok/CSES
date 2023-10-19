@@ -32,65 +32,55 @@ inline int centroid(int node, int par, int _n)
 	return node;
 }
 
-ll calc(vector<int> v)
+ll calc(int *ctr, int &mx)
 {
-	sort(v.begin(), v.end());
-	vector<ii> tmp;
-	for (int x : v)
-	{
-		if (!tmp.empty() && tmp.back().f1 == x) tmp.back().s2++;
-		else tmp.pb({x, 1});
-	}
-
 	ll res = 0;
-	for (int i = 0, j = (int)tmp.size() - 1; i <= j; ++i)
+	for (int i = 1; i <= mx && 2*i <= k; ++i)
 	{
-		while (j >= 0 && tmp[i].f1 + tmp[j].f1 > k)
-			j--;
-		if (i > j)
-			break;
-
-		if (tmp[i].f1 + tmp[j].f1 == k)
-		{
-			if (i == j) res += 1LL * tmp[i].s2 * (tmp[i].s2-1) / 2;
-			else res += 1LL * tmp[i].s2 * tmp[j].s2;
-		}
+		int j = k - i;
+		if (i == j) res += 1ll * ctr[i] * (ctr[i]-1) / 2;
+		else res += 1ll * ctr[i] * ctr[j];
 	}
-
 	return res;
 }
 
-inline void get(int node, int par, int depth, vector<int> &v)
+inline void get(int node, int par, int depth, int *ctr, int &mx)
 {
-	v.pb(depth);
+	ctr[depth]++;
+	mx = max(mx, depth);
 	for (int to : adj[node])
 	{
 		if (!dead[to] && to != par)
-			get(to, node, depth + 1, v);
+			get(to, node, depth + 1, ctr, mx);
 	}
 }
 
-ll ans = 0;
+ll ans = 0; 
+int ctr_all[MAX], mx_all, ctr_cur[MAX], mx_cur;
 inline void decomp(int node)
 {
 	int _n = dfs_sz(node, -1);
 	int C = centroid(node, -1, _n);
 
-	vector<int> all;
+	mx_all = -1;
 	for (int to : adj[C])
 		if (!dead[to])
 	{
-		vector<int> v;
-		get(to, C, 1, v);
+		mx_cur = -1;
+		get(to, C, 1, ctr_cur, mx_cur);
 
-		ans -= calc(v);
-		for (int x : v)
+		ans -= calc(ctr_cur, mx_cur);
+		mx_all = max(mx_all, mx_cur);
+		for (int i = 1; i <= mx_cur; ++i)
 		{
-			ans += (x == k);
-			all.pb(x);
+			ans += (i == k ? ctr_cur[i] : 0);
+			ctr_all[i] += ctr_cur[i];
+			ctr_cur[i] = 0;
 		}
 	}
-	ans += calc(all);
+	ans += calc(ctr_all, mx_all);
+	for (int i = 1; i <= mx_all; ++i)
+		ctr_all[i] = 0;
 
 	dead[C] = true;
 	for (int to : adj[C])

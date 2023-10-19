@@ -32,68 +32,65 @@ inline int centroid(int node, int par, int _n)
 	return node;
 }
 
-ll calc(vector<int> v)
+int pfx[MAX];
+ll calc(int *ctr, int mx)
 {
-	sort(v.begin(), v.end());
-	vector<ii> tmp;
-	for (int x : v)
-	{
-		if (!tmp.empty() && tmp.back().f1 == x) tmp.back().s2++;
-		else tmp.pb({x, 1});
-	}
+	for (int i = 1; i <= mx; ++i)
+		pfx[i] = pfx[i-1] + ctr[i];
+
 	ll res = 0;
-
-	vector<int> pfx(tmp.size());
-	for (int i = 0; i < (int)tmp.size(); ++i)
-		pfx[i] = tmp[i].s2 + (i ? pfx[i-1] : 0);
-
-	for (int i = 0, j1 = (int)tmp.size() - 1, j2 = (int)tmp.size() - 1;; ++i)
+	for (int i = 1; i <= mx; ++i)
 	{
-		while (j1 >= 0 && tmp[i].f1 + tmp[j1].f1 >= k1)
-			j1--;
-		while (j2 >= 0 && tmp[i].f1 + tmp[j2].f1 > k2)
-			j2--;
+		int j1 = k1 - i, j2 = min(mx, k2 - i);
 		if (i > j2)
 			break;
+		if (j1 > mx)
+			continue;
 
-		if (j1 < i && i <= j2)
-			res += 1LL * tmp[i].s2 * (tmp[i].s2-1) / 2;
-		res += 1LL * tmp[i].s2 * (pfx[j2] - pfx[max(i, j1)]);
+		if (j1 <= i && i <= j2)
+			res += 1ll * ctr[i] * (ctr[i] - 1) / 2;
+		res += 1ll * ctr[i] * (pfx[j2] - pfx[max(i, j1 - 1)]);
 	}
 	return res;
 }
 
-inline void get(int node, int par, int depth, vector<int> &v)
+inline void get(int node, int par, int depth, int *ctr, int &mx)
 {
-	v.pb(depth);
+	ctr[depth]++;
+	mx = max(mx, depth);
 	for (int to : adj[node])
 	{
 		if (!dead[to] && to != par)
-			get(to, node, depth + 1, v);
+			get(to, node, depth + 1, ctr, mx);
 	}
 }
 
-ll ans = 0;
+ll ans = 0; 
+int ctr_all[MAX], mx_all, ctr_cur[MAX], mx_cur;
 inline void decomp(int node)
 {
 	int _n = dfs_sz(node, -1);
 	int C = centroid(node, -1, _n);
 
-	vector<int> all;
+	mx_all = -1;
 	for (int to : adj[C])
 		if (!dead[to])
 	{
-		vector<int> v;
-		get(to, C, 1, v);
+		mx_cur = -1;
+		get(to, C, 1, ctr_cur, mx_cur);
 
-		ans -= calc(v);
-		for (int x : v)
+		ans -= calc(ctr_cur, mx_cur);
+		mx_all = max(mx_all, mx_cur);
+		for (int i = 1; i <= mx_cur; ++i)
 		{
-			ans += (k1 <= x && x <= k2);
-			all.pb(x);
+			ans += (k1 <= i && i <= k2 ? ctr_cur[i] : 0);
+			ctr_all[i] += ctr_cur[i];
+			ctr_cur[i] = 0;
 		}
 	}
-	ans += calc(all);
+	ans += calc(ctr_all, mx_all);
+	for (int i = 1; i <= mx_all; ++i)
+		ctr_all[i] = 0;
 
 	dead[C] = true;
 	for (int to : adj[C])
@@ -103,10 +100,6 @@ inline void decomp(int node)
 
 int main()
 {
-	//k1 = 5; k2 = 7;
-	//calc({1, 3, 3, 4, 4});
-	//return 0;
-
 	ios :: sync_with_stdio(0);
 	cin.tie(0);
 	cout.tie(0);
