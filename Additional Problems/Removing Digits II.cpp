@@ -16,37 +16,84 @@ using pl = pair<ll, ll>;
 
 const ld PI = 4*atan((ld)1);
 
-// number of times the same answer appeared as the previous number
-int tmp[] = { 9, 1, 9, 2, 8, 3, 7, 4, 6, 5, 6, 9, 7, 8, 9, 6, 1 };
+// Observation
+// Let f(n) denote the answer for n
+// 1. \forall x \in \nats^+. f(n) \le f(n+1)
+// 2. the ten^th will always decrease by at most 1
 
-int fq[1000000];
-int dp[1000000];
+// Let dp[i][j][k] be the number of steps to go from i \underset{j times}{9...9} k to "(i-1) \underset{j times}{9...9} ?
+
+pair<ll, int> dp[10][18][10];
 
 void solve()
 {
-	fill(dp, dp + 1000000, 1e9);
-
-	dp[0] = 0;
-	for (int i = 1; i < 1000000; ++i)
+	for (int i = 1; i <= 9; ++i)
 	{
-		string s = to_string(i);
-		for (char &c : s)
+		for (int k = 0; k <= 9; ++k)
 		{
-			c -= '0';
-			dp[i] = min(dp[i], 1 + dp[i - c]);
+			if (i <= k) dp[i][0][k] = { 2, 10 - i };
+			else dp[i][0][k] = { 1, 10 + k - i };
 		}
-		// cout << dp[i] << " \n"[i == 100];
-		fq[dp[i]]++;
+	}
 
-		// cerr << dp[i] << '\n';
-		if (i == 999999) cerr << dp[i] << '\n';
-	}
-	
-	for (int i = 1; i < 128206; ++i)
+	for (int j = 1; j < 18; ++j)
 	{
-		cout << fq[i] << " \n"[i % 17 == 0];
-		// assert(dp[i] == tmp[(i-1) % 17]);
+		for (int i = 1; i <= 9; ++i)
+		{
+			for (int k = 0; k <= 9; ++k)
+			{
+				int cur = k;
+				for (int x = 9; x >= 0; --x)
+				{
+					auto [a, b] = dp[max(i, x)][j-1][cur];
+					dp[i][j][k].f1 += a;
+					cur = b;
+				}
+				dp[i][j][k].s2 = cur;
+			}
+		}
 	}
+
+	string s;
+	cin >> s;
+
+	int n = (int)s.size();
+
+	vector<int> num(n);
+	for (int i = 0; i < n; ++i)
+		num[i] = s[n-i-1] - '0';
+
+	// make the numbers from [1 .. n-2] 9
+	ll res = 0;
+	for (int i = 1; i+1 < n; ++i)
+	{
+		if (num[i] < 0) num[i] += 10, num[i+1] -= 1;
+		if (num[i] == 9)
+			continue;
+
+		int mx = *max_element(num.begin() + i+1, num.end());
+		
+		while (num[i] >= 0) 
+		{
+			res += dp[max(mx, num[i])][i-1][num[0]].f1;
+			num[0] = dp[max(mx, num[i])][i-1][num[0]].s2;
+			num[i]--;
+		}
+
+		num[i] += 10; num[i+1] -= 1;
+	}
+
+	for (int i = n-1; i >= 1; --i)
+	{
+		while (num[i] > 0)
+		{
+			res += dp[num[i]][i-1][num[0]].f1;
+			num[0] = dp[num[i]][i-1][num[0]].s2;
+			num[i]--;
+		}
+	}
+
+	cout << res + (num[0] > 0) << '\n';
 }
 
 int main()
