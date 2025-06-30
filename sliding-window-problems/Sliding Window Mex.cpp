@@ -8,14 +8,14 @@ int ar[MAX], idx[MAX], bit[MAX];
 
 inline void add(int x, int val) 
 {
-	for (; x < MAX; x |= x+1)
+	for (++x; x < MAX; x |= x+1)
 		bit[x] += val;
 }
 
 inline int query(int x)
 {
 	int Z = 0;
-	for (; x > 0; x &= x-1) 
+	for (++x; x > 0; x &= x-1) 
 		Z += bit[x-1];
 	return Z;
 }
@@ -45,20 +45,19 @@ int main()
 		while (l < r)
 		{
 			int mid = (l + r) >> 1;
-			if (query(mid+1) < mid) r = mid;
+			if (query(mid+1) <= mid) r = mid;
 			else l = mid + 1;
 		}
 		return l;
 	};
 
-	cerr << query(1) << '\n';
 
-	cout << mex() << '\n';
+	cout << mex();
 	for (int i = K; i < N; ++i)
 	{
 		if (ar[i] < MAX) 
 		{
-			if (idx[ar[i]] <= i-K)
+			if (idx[ar[i]] < i-K)
 				add(ar[i], 1);
 			idx[ar[i]] = i;
 		}
@@ -66,8 +65,10 @@ int main()
 		{
 			add(ar[i-K], -1);
 		}
+
 		cout << " " << mex();
 	}
+	cout << '\n';
 
 	return 0;
 }

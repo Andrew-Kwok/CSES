@@ -13,7 +13,7 @@ vector<int> adj[2 * MAX];
 int match[2 * MAX];
 bool vst[2 * MAX];
 
-inline bool bpm(int node)
+ inline bool bpm(int node)
 {
 	for (int to : adj[node])
 	{

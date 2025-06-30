@@ -10,8 +10,8 @@ using namespace std;
 #define fastio ios :: sync_with_stdio(0); cin.tie(0); cout.tie(0);
 #define debug(x) cerr << "[" << #x << "]: " << x << "\n";
 
-#pragma GCC optimize ("Ofast")
-#pragma GCC optimize ("unroll-loops")
+// #pragma GCC optimize ("Ofast")
+// #pragma GCC optimize ("unroll-loops")
 
 using ll = long long;
 using ld = long double;
@@ -90,22 +90,45 @@ void solve()
     sort(v.begin(), v.end());
 
     dp[0][0] = 1;
-    for (int i = 0, pfx = 0; i < size(v); ++i)
+    for (int i = 0, pfx = 0; i < size(v); ++i) 
     {
-        for (int j = 0; j <= pfx; ++j) // current different intervals
+        for (int j = 0; j <= pfx; ++j)
+            dp[~i&1][j] = 0;
+
+        for (int j = 0; j <= pfx; ++j)
         {
-            for (int k = 1; k <= min(j+1 + (j != 0), v[i]); ++k) // new different intervals
+            for (int k = 1; k <= v[i]; ++k)
             {
-                dp[~i&1][j+k] += dp[i&1][j] * choose(j+1 + (j != 0), k) * choose(v[i] - 1, k-1);
+                dp[~i&1][j+k] += dp[i&1][j] * choose(j+k, j) * choose(v[i]-1, k-1);
             }
         }
         pfx += v[i];
     }
 
+    Mint Z = 0;
     for (int i = 0; i <= N; ++i)
-        cout << dp[size(v) & 1][i] << " \n"[i == N];
+    {
+        Z += ((N-i)&1 ? -1 : 1) * dp[size(v) & 1][i];
+    }
+    cout << Z << '\n';
 
-    cout << dp[size(v) & 1][N] << '\n';
+    // dp[0][0] = 1;
+    // for (int i = 0, pfx = 0; i < size(v); ++i)
+    // {
+    //     for (int j = 0; j <= pfx; ++j) // current different intervals
+    //     {
+    //         for (int k = 1; k <= min(j+1 + (j != 0), v[i]); ++k) // new different intervals
+    //         {
+    //             dp[~i&1][j+k] += dp[i&1][j] * choose(j+1 + (j != 0), k) * choose(v[i] - 1, k-1);
+    //         }
+    //     }
+    //     pfx += v[i];
+    // }
+
+    // for (int i = 0; i <= N; ++i)
+    //     cout << dp[size(v) & 1][i] << " \n"[i == N];
+
+    // cout << dp[size(v) & 1][N] << '\n';
 }
 
 int main()
